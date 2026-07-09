@@ -59,8 +59,8 @@ against the interfaces in §5. Dependency arrows point at what a module needs.
 | M0 | Project scaffolding (project.yml, app entry, DI, navigation shell, Info.plist keys, background modes) | `specs/M0-scaffolding.md` | — |
 | M1 | Catalog: search, RSS ingestion, subscriptions, episode/download management, SwiftData store | `specs/M1-catalog.md` | M0 |
 | M2 | Playback: AVPlayer engine, background audio, now-playing info, rate control, seek API, playhead publisher | `specs/M2-playback.md` | M0, M1 (Episode model) |
-| M3 | Transcripts: feed-transcript fetch/parse (SRT/VTT/JSON), on-device SpeechAnalyzer pipeline, unified `Transcript` store | `specs/M3-transcripts.md` | M1, M2 (playhead for scheduling) |
-| M4 | Transcript overlay UI: lyrics-style view, sync/auto-scroll, tap-to-seek, selection gestures | `specs/M4-overlay-ui.md` | M2, M3, M5, M6 (interfaces only) |
+| M3 | Transcripts: feed-transcript fetch/parse (SRT/VTT/JSON), on-device SpeechAnalyzer pipeline, unified `Transcript` store | `specs/M3-transcripts.md` | M1 (models, download state) |
+| M4 | Transcript overlay UI: lyrics-style view, sync/auto-scroll, tap-to-seek, selection gestures | `specs/M4-overlay-ui.md` | M1, M2, M3, M5, M6 (interfaces only) |
 | M5 | Translation service: word/phrase translation, language-pack lifecycle, translation cache | `specs/M5-translation.md` | M0 |
 | M6 | Explain service: FoundationModels session mgmt, prompt design, guided generation, availability gating | `specs/M6-explain.md` | M0, M3 (segment context) |
 
@@ -144,7 +144,7 @@ Cached AI artifacts (so airplane mode keeps working and we don't re-run models):
 }
 
 @Model final class ExplanationCacheEntry {
-  @Attribute(.unique) var key: String  // episodeGUID + segment index range + UTF-16 range + targetLang
+  @Attribute(.unique) var key: String  // SHA-256 of "source|target|normalizedPassage|normalizedContext" (see §11.6)
   var passage: String
   var explanationJSON: Data            // encoded PassageExplanation (see §5.4)
   var createdAt: Date
@@ -199,15 +199,26 @@ protocol TranscriptProviderProtocol: Sendable {
 
 /// Observable wrapper: UI watches `segments` + `state` while transcription streams in.
 @MainActor @Observable final class TranscriptHandle {
+  private(set) var languageCode: String                   // BCP-47 actually used (M4 needs it for translate/explain)
   private(set) var state: TranscriptState
   private(set) var segments: [TranscriptSegmentSnapshot]  // value-type snapshots, sorted
   private(set) var progress: Double                        // 0...1 of episode duration transcribed
+  // Mutation: internal func apply(state:segments:progress:) called by M3's provider on the main actor.
+  // An internal preview initializer (canned segments) exists for M4 previews/tests.
+}
+
+struct TranscriptSegmentSnapshot: Identifiable, Hashable, Sendable {
+  var id: PersistentIdentifier   // of the backing TranscriptSegment
+  var index: Int
+  var startTime: TimeInterval
+  var endTime: TimeInterval
+  var text: String
+  var wordTimings: [WordTiming]  // empty for coarse feed transcripts
 }
 ```
 
-`TranscriptSegmentSnapshot` is a `Sendable` struct mirror of
-`TranscriptSegment` (id, index, times, text, wordTimings) — UI never touches
-SwiftData objects directly for the overlay hot path.
+UI never touches SwiftData objects directly for the overlay hot path —
+only these snapshots.
 
 ### 5.3 Translation (M5 provides)
 
@@ -333,3 +344,64 @@ Apple Intelligence"). Unexpected errors log via `os.Logger` subsystem
   and keep the call site isolated in the thin wrapper — do not restructure
   around guesses.
 - Commit per module, message format: `M<n>: <what>`.
+
+## 11. Reconciliation decisions (binding — override specs where they differ)
+
+Ratified after the M0–M6 spec pass. Where a spec says otherwise, THIS
+section wins.
+
+1. **M0 also implements the SwiftData models** (§4, verbatim) in
+   `LingoPodKit/Sources/LingoPodKit/Models/`, so `Interfaces.swift`
+   compiles standalone. M1 owns parsers, services, downloads, and UI — not
+   the model definitions (it may add convenience extensions).
+2. **New directory `LingoPod/Services/`** is part of the layout (§2):
+   app-target service implementations that need SwiftData `ModelActor`s or
+   URLSession delegates (`CatalogService`, `DownloadCoordinator`,
+   transcript/translation/explanation cache stores).
+3. **Terminology, fixed app-wide:** in code, `sourceLanguage` = the
+   podcast/learning language; `targetLanguage` = the learner's native
+   language, defined as `Locale.current.language` in v1 (no settings
+   screen). Language resolution order when calling translate/explain:
+   `TranscriptHandle.languageCode` first, else
+   `Podcast.languageOverride ?? Podcast.languageCode`.
+4. **`TranscriptState.failed(reason: String)`**: `reason` is a stable
+   machine code from M3's `TranscriptFailureCode` (e.g.
+   `unsupportedLocale`, `assetDownloadFailed`, `needsEpisodeDownload`,
+   `audioUnreadable`). M4 maps codes → localized copy + action buttons.
+   Same convention for any other `failed(reason:)` in the codebase.
+5. **Capability add-ons use small additive protocols, not downcasts**:
+   `TranslationDownloadPreparing` (M5, `prepare(from:to:)`) and
+   `TranslationFallbackProviding` (M6, `translateFallback(text:from:to:)`).
+   Concrete services conform; `AppContainer` exposes them as optional
+   capabilities (`(service as? TranslationDownloadPreparing)` at the
+   container boundary, mocks can conform too).
+6. **Explanation cache key** = SHA-256 of
+   `"\(source)|\(target)|\(normalizedPassage)|\(normalizedContext)"`
+   (per M6's spec), since `explain()` receives no episode locator.
+7. **Transcription is linear-from-start** over the downloaded file — no
+   playhead-priority windowing in v1. M3 has no M2 dependency. Progress UI
+   comes from `TranscriptHandle.progress`; Speech asset download happens
+   automatically inside the M3 pipeline (no extra protocol surface).
+8. **Download completion signaling (v1):** M3's `TranscriptProvider` may
+   poll `Episode.downloadState` (1 s interval, 30 min timeout) while
+   waiting for a download to finish. If M1 later adds an async completion
+   signal, M3 switches to it.
+9. **`PlaybackState.failed`** carries M2's concrete
+   `PlaybackError` (Sendable/Equatable), not a bare `Error`.
+   `Episode.localAudioPath` (relative) resolves to an absolute URL via a
+   single helper `Episode.resolvedLocalAudioURL` (extension, M1-owned,
+   path convention per M0: `Application Support/Episodes/<sha256(guid)>`,
+   excluded from iCloud backup).
+10. **`AppContainer`** explicitly holds: `playerEngine` (concrete type —
+    `@Observable` existentials don't drive SwiftUI invalidation),
+    `catalogService`, `transcriptProvider`, `translationService`,
+    `explainService` (protocol-typed with mock defaults until modules land).
+11. **Refresh never deletes episodes** removed upstream; deletion happens
+    only via unsubscribe/removeDownload. `CatalogServiceProtocol.download`
+    returns once the download is durably enqueued, not on completion.
+12. **ATS stays at default** (no arbitrary loads). Any exception must be
+    host-scoped, justified in this doc first.
+13. **Speaker names** (VTT `<v>`, Podcasting-2.0 `speaker`) are used only
+    as segment-break hints and then discarded — candidate v2 model field.
+14. **`ExplainServiceProtocol.availability`** stays a plain getter in v1;
+    M4 may poll (≤0.5 Hz) while an explain sheet shows `modelNotReady`.
