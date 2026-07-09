@@ -77,7 +77,8 @@ final class AppContainer {
         explain.refreshAvailability()
         self.explainService = explain
 
-        self.transcriptProvider = MockTranscriptProvider() // M3 wiring pending
+        // M3
+        self.transcriptProvider = TranscriptProvider(modelContainer: modelContainer)
 
         // M2
         self.playerEngine = PlayerEngine(
