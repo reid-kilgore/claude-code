@@ -1,0 +1,103 @@
+# XcodeGen spec for the Flashlock app and its three Screen Time extensions.
+# Regenerate the Xcode project with: xcodegen generate
+#
+# Targets (docs/02-architecture.md §1): all four require the family-controls
+# entitlement, membership in the group.com.flashlock.shared App Group, and the
+# SAME minimum deployment target — mismatched extension targets are the
+# most-cited cause of "custom shield never appears".
+#
+# FlashlockCore is platform-independent and tiny, so the extensions link it too
+# for the UnlockPolicy/UnlockLedger/TimeCredit types read out of the App Group.
+# They must never load card/deck data (~6 MB monitor jetsam ceiling).
+name: Flashlock
+
+options:
+  bundleIdPrefix: com.flashlock
+  deploymentTarget:
+    iOS: "17.4"
+  createIntermediateGroups: true
+
+packages:
+  FlashlockCore:
+    path: ../FlashlockCore
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    IPHONEOS_DEPLOYMENT_TARGET: "17.4"
+    TARGETED_DEVICE_FAMILY: "1"
+    CODE_SIGN_STYLE: Automatic
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    # Set your Apple Developer team once here (or per-target in Xcode's
+    # Signing & Capabilities tab) before building on device:
+    # DEVELOPMENT_TEAM: XXXXXXXXXX
+
+targets:
+  Flashlock:
+    type: application
+    platform: iOS
+    sources:
+      - path: App
+      - path: Shared
+    dependencies:
+      - package: FlashlockCore
+      - target: FlashlockMonitor
+      - target: FlashlockShieldUI
+      - target: FlashlockShieldAction
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.flashlock.app
+        INFOPLIST_FILE: App/Info.plist
+        CODE_SIGN_ENTITLEMENTS: App/Flashlock.entitlements
+
+  # Headless DeviceActivity monitor. Extension point:
+  # com.apple.deviceactivity.monitor-extension. Keep it tiny: only the shared
+  # store, the reconciler, and the re-lock scheduler — no card data, no UI.
+  FlashlockMonitor:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Monitor
+      - path: Shared
+    dependencies:
+      - package: FlashlockCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.flashlock.app.monitor
+        INFOPLIST_FILE: Monitor/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Monitor/FlashlockMonitor.entitlements
+
+  # Custom shield appearance. Extension point:
+  # com.apple.ManagedSettingsUI.shield-configuration-service.
+  FlashlockShieldUI:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: ShieldUI
+      - path: Shared/AppGroup.swift
+    dependencies:
+      - package: FlashlockCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.flashlock.app.shieldui
+        INFOPLIST_FILE: ShieldUI/Info.plist
+        CODE_SIGN_ENTITLEMENTS: ShieldUI/FlashlockShieldUI.entitlements
+
+  # Shield button handler. Extension point:
+  # com.apple.ManagedSettings.shield-action-service — note NO "UI" in the
+  # identifier; com.apple.ManagedSettingsUI.shield-action-service is an App
+  # Store upload rejection (docs/02-architecture.md §1).
+  FlashlockShieldAction:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: ShieldAction
+      - path: Shared/AppGroup.swift
+    dependencies:
+      - package: FlashlockCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.flashlock.app.shieldaction
+        INFOPLIST_FILE: ShieldAction/Info.plist
+        CODE_SIGN_ENTITLEMENTS: ShieldAction/FlashlockShieldAction.entitlements
