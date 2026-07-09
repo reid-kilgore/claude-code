@@ -108,6 +108,34 @@ final class CardStore: ObservableObject {
         save()
     }
 
+    // MARK: - Import / sync
+
+    /// Imports (or re-imports) a deck file: merges by note guid into the
+    /// existing deck with the same name (case-insensitive), creating the deck
+    /// first if needed. Idempotent — re-importing the same file reports
+    /// everything unchanged — and never deletes cards (DeckMerger semantics),
+    /// so this is also the sync path for updated Anki exports.
+    @discardableResult
+    func applyImport(_ file: DeckImportFile) -> DeckMerger.Result {
+        let deck: Deck
+        if let existing = decks.first(where: {
+            $0.name.caseInsensitiveCompare(file.name) == .orderedSame
+        }) {
+            deck = existing
+        } else {
+            deck = Deck(name: file.name)
+            decks.append(deck)
+        }
+
+        let result = DeckMerger.merge(file, into: deck.id, existingCards: cards(in: deck))
+        // result.cards is the deck's complete post-merge card list: replace
+        // this deck's cards wholesale, leaving other decks' cards untouched.
+        cards.removeAll { $0.deckID == deck.id }
+        cards.append(contentsOf: result.cards)
+        save()
+        return result
+    }
+
     // MARK: - Persistence
 
     private func load() {

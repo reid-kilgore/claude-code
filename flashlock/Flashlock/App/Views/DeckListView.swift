@@ -1,12 +1,17 @@
 import FlashlockCore
 import SwiftUI
+import UniformTypeIdentifiers
 
-/// Minimal deck CRUD: list, create, delete, and drill into a deck's cards.
+/// Minimal deck CRUD: list, create, delete, import/sync from a
+/// flashlock-deck-v1 JSON file, and drill into a deck's cards.
 struct DeckListView: View {
     @EnvironmentObject private var cardStore: CardStore
 
     @State private var newDeckAlertPresented = false
     @State private var newDeckName = ""
+    @State private var importerPresented = false
+    @State private var importResultMessage = ""
+    @State private var importAlertPresented = false
 
     var body: some View {
         List {
@@ -25,6 +30,14 @@ struct DeckListView: View {
             .onDelete { offsets in
                 for index in offsets {
                     cardStore.delete(cardStore.decks[index])
+                }
+            }
+
+            Section {
+                Button {
+                    importerPresented = true
+                } label: {
+                    Label("Import deck\u{2026}", systemImage: "square.and.arrow.down")
                 }
             }
         }
@@ -49,6 +62,51 @@ struct DeckListView: View {
             }
             Button("Cancel", role: .cancel) {}
         }
+        .fileImporter(
+            isPresented: $importerPresented,
+            allowedContentTypes: [.json]
+        ) { result in
+            handleImport(result)
+        }
+        .alert("Deck import", isPresented: $importAlertPresented) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(importResultMessage)
+        }
+    }
+
+    /// Reads the picked file and merges it via `CardStore.applyImport`.
+    /// Re-importing the same (or an updated) export is the sync path:
+    /// text updates in place, scheduling is preserved, nothing is deleted.
+    private func handleImport(_ result: Result<URL, Error>) {
+        do {
+            let url = try result.get()
+            // Files-picker URLs are security-scoped; access must be bracketed
+            // or reading throws a permission error.
+            let accessing = url.startAccessingSecurityScopedResource()
+            defer {
+                if accessing { url.stopAccessingSecurityScopedResource() }
+            }
+            let data = try Data(contentsOf: url)
+            let file = try DeckImportFile.decode(from: data)
+            let outcome = cardStore.applyImport(file)
+            importResultMessage = "Imported \u{201C}\(file.name)\u{201D}: "
+                + "\(outcome.added) added, \(outcome.updated) updated, "
+                + "\(outcome.unchanged) unchanged."
+        } catch let error as DeckImportFile.ImportError {
+            switch error {
+            case let .unsupportedFormat(format):
+                importResultMessage =
+                    "This file isn't a Flashlock deck (format \u{201C}\(format)\u{201D})."
+            case .emptyDeck:
+                importResultMessage = "The deck file is empty."
+            }
+        } catch is DecodingError {
+            importResultMessage = "This file isn't a Flashlock deck."
+        } catch {
+            importResultMessage = "Import failed: \(error.localizedDescription)"
+        }
+        importAlertPresented = true
     }
 }
 

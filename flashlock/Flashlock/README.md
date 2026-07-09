@@ -73,6 +73,15 @@ package. Architecture and design decisions: `../docs/02-architecture.md`.
 - If callbacks stop firing entirely, revoking and re-granting Screen Time
   permission in Settings is the community-standard reset.
 
+## Importing decks from Anki
+
+Export the deck from Anki as `.apkg` with **"Support older Anki versions"**
+checked, convert it with `scripts/apkg_to_flashlock.py` (produces a
+`flashlock-deck-v1` JSON file), AirDrop or Files-share the JSON to the phone,
+then Decks → Import deck. Re-run the script on a newer export and re-import
+to sync: text updates in place, scheduling state is preserved, and nothing is
+ever deleted.
+
 ## Layout
 
 | Path | Contents |
