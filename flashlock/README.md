@@ -27,7 +27,8 @@ flashlock/
 ├── Flashlock/                     iOS app + 3 Screen Time extensions (XcodeGen project)
 └── scripts/
     ├── gen_fsrs_vectors.py        regenerates the golden test vectors from py-fsrs
-    └── fsrs_port_check.py         fuzz-compares the port's logic against py-fsrs
+    ├── fsrs_port_check.py         fuzz-compares the port's logic against py-fsrs
+    └── apkg_to_flashlock.py       converts an Anki .apkg export to an importable deck JSON
 ```
 
 ## Status
@@ -63,6 +64,21 @@ pip install fsrs==6.3.1
 python3 flashlock/scripts/fsrs_port_check.py     # fuzz equivalence check
 python3 flashlock/scripts/gen_fsrs_vectors.py    # regenerate golden vectors (stdout)
 ```
+
+## Getting your Anki cards in (and keeping them in sync)
+
+```sh
+# In Anki: File → Export → .apkg, with "Support older Anki versions" CHECKED
+python3 flashlock/scripts/apkg_to_flashlock.py MyDeck.apkg -o mydeck.flashlock.json
+# AirDrop / Files the JSON to the phone, then in Flashlock: Decks → Import deck…
+```
+
+Re-running the script and re-importing is the sync: cards match on Anki's
+stable note guid, so text edits update in place, new notes are added,
+**scheduling state is never touched, and nothing is ever deleted**. Front/back
+come from the note's first two fields (`--front/--back` to override), HTML and
+media references are stripped, cloze notes are skipped, and `--mode
+multipleChoice|typed` marks the whole import as recall cards for the gate.
 
 ## Building the app
 

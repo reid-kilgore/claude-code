@@ -15,9 +15,11 @@ Tranches ordered by (user value ÷ effort), with dependency notes.
   card" prompt (FlashlockCore already tracks lapses).
 
 ## Tranche 2 — Content acquisition (biggest adoption lever)
-- **Anki .apkg import** (SQLite + zip; map notes/cards/scheduling state; FSRS
-  memory states import cleanly since Anki also runs FSRS).
-- **CSV/JSON import; share-sheet ingestion.**
+- **In-app Anki .apkg import** (SQLite + zip in-app; map notes/cards/scheduling
+  state; FSRS memory states import cleanly since Anki also runs FSRS).
+  Shipped interim: `scripts/apkg_to_flashlock.py` → JSON → in-app import with
+  guid-keyed merge (text syncs, scheduling preserved, no deletions).
+- **CSV import; share-sheet ingestion of the JSON deck format.**
 - **AI card generation** (paste text/photo → cards). First feature that needs
   network; revisit privacy stance and App Review posture then.
 - **Starter deck gallery** (bundled, curated).

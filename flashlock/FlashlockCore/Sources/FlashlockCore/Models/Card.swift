@@ -55,6 +55,10 @@ public struct Card: Codable, Identifiable, Equatable, Sendable {
     /// Alternative accepted answers for typed grading (e.g. "USA", "United States").
     public var alternativeAnswers: [String]
     public var answerMode: AnswerMode
+    /// Stable identity of the note this card was imported from (Anki note
+    /// guid). Re-imports match on this to update text without touching
+    /// scheduling state. Nil for cards created in-app.
+    public var sourceGUID: String?
 
     // Scheduling state
     public var phase: CardPhase
@@ -74,6 +78,7 @@ public struct Card: Codable, Identifiable, Equatable, Sendable {
         back: String,
         alternativeAnswers: [String] = [],
         answerMode: AnswerMode = .multipleChoice,
+        sourceGUID: String? = nil,
         phase: CardPhase = .new,
         memory: MemoryState? = nil,
         stepIndex: Int = 0,
@@ -89,6 +94,7 @@ public struct Card: Codable, Identifiable, Equatable, Sendable {
         self.back = back
         self.alternativeAnswers = alternativeAnswers
         self.answerMode = answerMode
+        self.sourceGUID = sourceGUID
         self.phase = phase
         self.memory = memory
         self.stepIndex = stepIndex

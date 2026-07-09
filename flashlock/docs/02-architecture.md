@@ -149,6 +149,10 @@ pain point, and the extensions don't need card data.)
   pile-based unlock state machine (missed cards requeue Anki-style; the grant
   is earned when the pile is cleared), the per-pile recall-card minimum, daily
   unlock cap, and time-windowed credits.
+- `DeckImportFile` / `DeckMerger` — the JSON deck interchange format
+  (produced from an Anki .apkg by `scripts/apkg_to_flashlock.py`) and the
+  guid-keyed merge: re-imports update text in place, add new cards, preserve
+  scheduling state, and never delete.
 
 ## 5. Entitlement & distribution reality (plan around this)
 

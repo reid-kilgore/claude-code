@@ -61,7 +61,9 @@ Trust
 
 ## Explicitly OUT of MVP (see 03-roadmap.md)
 
-- Anki import (.apkg), AI card generation, shared/downloadable decks
+- In-app .apkg parsing (interim: `scripts/apkg_to_flashlock.py` converts an
+  Anki export to JSON, imported in-app with guid-keyed merge/sync), AI card
+  generation, shared/downloadable decks
 - Typed-answer character diff display; audio/image cards; cloze deletions
 - Per-user FSRS weight optimization (we keep the review log so it's possible later)
 - Category-based blocking (`.all(except:)`), website/domain blocking
