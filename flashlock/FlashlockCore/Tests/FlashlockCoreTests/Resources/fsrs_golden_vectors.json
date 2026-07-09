@@ -1,0 +1,363 @@
+{
+ "generator": "py-fsrs 6.3.1, FSRS-6 default parameters, desired_retention=0.9, learning_steps=[1m,10m], relearning_steps=[10m], fuzzing off, reviews at exact due times from 2026-01-01T00:00:00Z",
+ "scenarios": {
+  "all_good": [
+   {
+    "rating": 3,
+    "reviewedAtOffsetSec": 0.0,
+    "state": "learning",
+    "step": 1,
+    "stability": 2.3065,
+    "difficulty": 2.118103970459016,
+    "dueOffsetSec": 600.0
+   },
+   {
+    "rating": 3,
+    "reviewedAtOffsetSec": 600.0,
+    "state": "review",
+    "step": null,
+    "stability": 2.3065,
+    "difficulty": 2.111214235785395,
+    "dueOffsetSec": 173400.0
+   },
+   {
+    "rating": 3,
+    "reviewedAtOffsetSec": 173400.0,
+    "state": "review",
+    "step": null,
+    "stability": 10.971048263078135,
+    "difficulty": 2.1043313908464483,
+    "dueOffsetSec": 1123800.0
+   },
+   {
+    "rating": 3,
+    "reviewedAtOffsetSec": 1123800.0,
+    "state": "review",
+    "step": null,
+    "stability": 46.316858440073425,
+    "difficulty": 2.0974554287524403,
+    "dueOffsetSec": 5098200.0
+   },
+   {
+    "rating": 3,
+    "reviewedAtOffsetSec": 5098200.0,
+    "state": "review",
+    "step": null,
+    "stability": 162.99981577472244,
+    "difficulty": 2.0905863426205262,
+    "dueOffsetSec": 19181400.0
+   },
+   {
+    "rating": 3,
+    "reviewedAtOffsetSec": 19181400.0,
+    "state": "review",
+    "step": null,
+    "stability": 497.8765551245907,
+    "difficulty": 2.083724125574744,
+    "dueOffsetSec": 62208600.0
+   }
+  ],
+  "with_lapse": [
+   {
+    "rating": 3,
+    "reviewedAtOffsetSec": 0.0,
+    "state": "learning",
+    "step": 1,
+    "stability": 2.3065,
+    "difficulty": 2.118103970459016,
+    "dueOffsetSec": 600.0
+   },
+   {
+    "rating": 3,
+    "reviewedAtOffsetSec": 600.0,
+    "state": "review",
+    "step": null,
+    "stability": 2.3065,
+    "difficulty": 2.111214235785395,
+    "dueOffsetSec": 173400.0
+   },
+   {
+    "rating": 3,
+    "reviewedAtOffsetSec": 173400.0,
+    "state": "review",
+    "step": null,
+    "stability": 10.971048263078135,
+    "difficulty": 2.1043313908464483,
+    "dueOffsetSec": 1123800.0
+   },
+   {
+    "rating": 1,
+    "reviewedAtOffsetSec": 1123800.0,
+    "state": "relearning",
+    "step": 0,
+    "stability": 1.53901253028147,
+    "difficulty": 7.389975788014609,
+    "dueOffsetSec": 1124400.0
+   },
+   {
+    "rating": 3,
+    "reviewedAtOffsetSec": 1124400.0,
+    "state": "review",
+    "step": null,
+    "stability": 1.5718415897918614,
+    "difficulty": 7.377814181523433,
+    "dueOffsetSec": 1297200.0
+   },
+   {
+    "rating": 3,
+    "reviewedAtOffsetSec": 1297200.0,
+    "state": "review",
+    "step": null,
+    "stability": 4.934768723890772,
+    "difficulty": 7.365664736638748,
+    "dueOffsetSec": 1729200.0
+   }
+  ],
+  "easy_path": [
+   {
+    "rating": 4,
+    "reviewedAtOffsetSec": 0.0,
+    "state": "review",
+    "step": null,
+    "stability": 8.2956,
+    "difficulty": 1.0,
+    "dueOffsetSec": 691200.0
+   },
+   {
+    "rating": 3,
+    "reviewedAtOffsetSec": 691200.0,
+    "state": "review",
+    "step": null,
+    "stability": 38.90514998232684,
+    "difficulty": 1.0,
+    "dueOffsetSec": 4060800.0
+   },
+   {
+    "rating": 4,
+    "reviewedAtOffsetSec": 4060800.0,
+    "state": "review",
+    "step": null,
+    "stability": 252.59351766241906,
+    "difficulty": 1.0,
+    "dueOffsetSec": 25920000.0
+   }
+  ],
+  "struggle": [
+   {
+    "rating": 1,
+    "reviewedAtOffsetSec": 0.0,
+    "state": "learning",
+    "step": 0,
+    "stability": 0.212,
+    "difficulty": 6.4133,
+    "dueOffsetSec": 60.0
+   },
+   {
+    "rating": 2,
+    "reviewedAtOffsetSec": 60.0,
+    "state": "learning",
+    "step": 0,
+    "stability": 0.14339874769184835,
+    "difficulty": 7.604209769076838,
+    "dueOffsetSec": 390.0
+   },
+   {
+    "rating": 3,
+    "reviewedAtOffsetSec": 390.0,
+    "state": "learning",
+    "step": 1,
+    "stability": 0.17121106463069335,
+    "difficulty": 7.5918339286046,
+    "dueOffsetSec": 990.0
+   },
+   {
+    "rating": 3,
+    "reviewedAtOffsetSec": 990.0,
+    "state": "review",
+    "step": null,
+    "stability": 0.20204708417386963,
+    "difficulty": 7.579470463972833,
+    "dueOffsetSec": 87390.0
+   },
+   {
+    "rating": 2,
+    "reviewedAtOffsetSec": 87390.0,
+    "state": "review",
+    "step": null,
+    "stability": 0.9395208998889709,
+    "difficulty": 8.378368066605624,
+    "dueOffsetSec": 173790.0
+   },
+   {
+    "rating": 3,
+    "reviewedAtOffsetSec": 173790.0,
+    "state": "review",
+    "step": null,
+    "stability": 2.3410904991796766,
+    "difficulty": 8.365218067835857,
+    "dueOffsetSec": 346590.0
+   }
+  ],
+  "hard_only": [
+   {
+    "rating": 2,
+    "reviewedAtOffsetSec": 0.0,
+    "state": "learning",
+    "step": 0,
+    "stability": 1.2931,
+    "difficulty": 5.112170705601056,
+    "dueOffsetSec": 330.0
+   },
+   {
+    "rating": 2,
+    "reviewedAtOffsetSec": 330.0,
+    "state": "learning",
+    "step": 0,
+    "stability": 0.7765494494075704,
+    "difficulty": 6.7404595108297,
+    "dueOffsetSec": 660.0
+   },
+   {
+    "rating": 2,
+    "reviewedAtOffsetSec": 660.0,
+    "state": "learning",
+    "step": 0,
+    "stability": 0.48225682837572786,
+    "difficulty": 7.821393497998797,
+    "dueOffsetSec": 990.0
+   },
+   {
+    "rating": 2,
+    "reviewedAtOffsetSec": 990.0,
+    "state": "learning",
+    "step": 0,
+    "stability": 0.30903030121765596,
+    "difficulty": 8.538967850205447,
+    "dueOffsetSec": 1320.0
+   }
+  ],
+  "lapse_then_recover": [
+   {
+    "rating": 3,
+    "reviewedAtOffsetSec": 0.0,
+    "state": "learning",
+    "step": 1,
+    "stability": 2.3065,
+    "difficulty": 2.118103970459016,
+    "dueOffsetSec": 600.0
+   },
+   {
+    "rating": 3,
+    "reviewedAtOffsetSec": 600.0,
+    "state": "review",
+    "step": null,
+    "stability": 2.3065,
+    "difficulty": 2.111214235785395,
+    "dueOffsetSec": 173400.0
+   },
+   {
+    "rating": 1,
+    "reviewedAtOffsetSec": 173400.0,
+    "state": "relearning",
+    "step": 0,
+    "stability": 0.6077016626638644,
+    "difficulty": 7.392238132342694,
+    "dueOffsetSec": 174000.0
+   },
+   {
+    "rating": 1,
+    "reviewedAtOffsetSec": 174000.0,
+    "state": "relearning",
+    "step": 0,
+    "stability": 0.22294679606919743,
+    "difficulty": 9.128074776178583,
+    "dueOffsetSec": 174600.0
+   },
+   {
+    "rating": 3,
+    "reviewedAtOffsetSec": 174600.0,
+    "state": "review",
+    "step": null,
+    "stability": 0.25856917397987833,
+    "difficulty": 9.114175070699241,
+    "dueOffsetSec": 261000.0
+   },
+   {
+    "rating": 3,
+    "reviewedAtOffsetSec": 261000.0,
+    "state": "review",
+    "step": null,
+    "stability": 0.9986295180610519,
+    "difficulty": 9.10028926492538,
+    "dueOffsetSec": 347400.0
+   },
+   {
+    "rating": 3,
+    "reviewedAtOffsetSec": 347400.0,
+    "state": "review",
+    "step": null,
+    "stability": 2.0219590106524326,
+    "difficulty": 9.086417344957292,
+    "dueOffsetSec": 520200.0
+   }
+  ]
+ },
+ "retention_08": {
+  "all_good": [
+   {
+    "rating": 3,
+    "reviewedAtOffsetSec": 0.0,
+    "state": "learning",
+    "step": 1,
+    "stability": 2.3065,
+    "difficulty": 2.118103970459016,
+    "dueOffsetSec": 600.0
+   },
+   {
+    "rating": 3,
+    "reviewedAtOffsetSec": 600.0,
+    "state": "review",
+    "step": null,
+    "stability": 2.3065,
+    "difficulty": 2.111214235785395,
+    "dueOffsetSec": 691800.0
+   },
+   {
+    "rating": 3,
+    "reviewedAtOffsetSec": 691800.0,
+    "state": "review",
+    "step": null,
+    "stability": 22.784052475942136,
+    "difficulty": 2.1043313908464483,
+    "dueOffsetSec": 7258200.0
+   },
+   {
+    "rating": 3,
+    "reviewedAtOffsetSec": 7258200.0,
+    "state": "review",
+    "step": null,
+    "stability": 158.3022479501867,
+    "difficulty": 2.0974554287524403,
+    "dueOffsetSec": 52618200.0
+   },
+   {
+    "rating": 3,
+    "reviewedAtOffsetSec": 52618200.0,
+    "state": "review",
+    "step": null,
+    "stability": 838.5331867580056,
+    "difficulty": 2.0905863426205262,
+    "dueOffsetSec": 292896600.0
+   },
+   {
+    "rating": 3,
+    "reviewedAtOffsetSec": 292896600.0,
+    "state": "review",
+    "step": null,
+    "stability": 3570.056662469496,
+    "difficulty": 2.083724125574744,
+    "dueOffsetSec": 1315699800.0
+   }
+  ]
+ }
+}
