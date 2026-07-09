@@ -1,0 +1,6 @@
+{
+  "segments": [
+    { "startTime": 5.0, "endTime": 8.0, "body": "Second in time, first in file." },
+    { "startTime": 0.0, "endTime": 4.0, "body": "First in time, second in file." }
+  ]
+}

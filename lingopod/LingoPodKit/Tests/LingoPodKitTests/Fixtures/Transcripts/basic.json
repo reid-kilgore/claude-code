@@ -1,0 +1,7 @@
+{
+  "version": "1.0.0",
+  "segments": [
+    { "speaker": "Host", "startTime": 0.78, "endTime": 4.32, "body": "Hello and welcome to the show." },
+    { "speaker": "Host", "startTime": 4.32, "endTime": 9.1, "body": "Today we're talking about coffee." }
+  ]
+}

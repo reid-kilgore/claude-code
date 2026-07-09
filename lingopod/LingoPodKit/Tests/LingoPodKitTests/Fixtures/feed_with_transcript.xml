@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:podcast="https://podcastindex.org/namespace/1.0">
+<channel>
+<title>Learn French Radio</title>
+<description>A daily <b>French</b> language podcast for learners.</description>
+<language>fr-FR</language>
+<itunes:author>Radio Apprendre</itunes:author>
+<itunes:image href="https://example.com/art.jpg"/>
+<item>
+<title>Episode Un</title>
+<description>Premiere episode.</description>
+<guid>ep-1-guid</guid>
+<pubDate>Mon, 06 Sep 2021 08:00:00 GMT</pubDate>
+<itunes:duration>01:02:03</itunes:duration>
+<enclosure url="https://example.com/audio/ep1.mp3" type="audio/mpeg"/>
+<podcast:transcript url="https://example.com/transcripts/ep1.vtt" type="text/vtt"/>
+<podcast:transcript url="https://example.com/transcripts/ep1.json" type="application/json"/>
+</item>
+<item>
+<title>Episode Deux</title>
+<description>Deuxieme episode.</description>
+<guid>ep-2-guid</guid>
+<pubDate>Tue, 07 Sep 2021 08:00:00 GMT</pubDate>
+<itunes:duration>45:30</itunes:duration>
+<enclosure url="https://example.com/audio/ep2.mp3" type="audio/mpeg"/>
+<podcast:transcript url="https://example.com/transcripts/ep2.srt" type="application/srt"/>
+</item>
+<item>
+<title>Episode Trois</title>
+<description>Troisieme episode.</description>
+<guid>ep-3-guid</guid>
+<pubDate>Wed, 08 Sep 2021 08:00:00 GMT</pubDate>
+<itunes:duration>185</itunes:duration>
+<enclosure url="https://example.com/audio/ep3.mp3" type="audio/mpeg"/>
+</item>
+</channel>
+</rss>

@@ -1,0 +1,4 @@
+# Fixtures are byte-exact test inputs: never normalize line endings or
+# encodings (crlf.srt tests CRLF handling; feed_malformed_dates_and_encoding.xml
+# is deliberately ISO-8859-1).
+* -text

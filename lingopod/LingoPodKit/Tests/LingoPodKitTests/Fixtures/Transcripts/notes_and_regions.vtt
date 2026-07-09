@@ -1,0 +1,17 @@
+WEBVTT
+
+NOTE
+This is a comment block, should be skipped entirely.
+
+STYLE
+::cue { color: yellow; }
+
+REGION
+id:bottom
+width:40%
+
+00:00:01.000 --> 00:00:04.000
+Real cue after the metadata blocks.
+
+00:00:04.000 --> 00:00:07.000
+Another real cue.
