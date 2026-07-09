@@ -1,10 +1,13 @@
 import FlashlockCore
 import Foundation
 
-/// Drives one "answer cards to unlock" session (docs/02-architecture.md §2.3):
-/// serves the gate pool with `forceRecall` so every question is objectively
-/// verifiable, feeds FSRS only for cards that were actually due, and on
-/// completion records the TimeCredit, lifts the shield, and schedules re-lock.
+/// Drives one "clear the pile to unlock" session (docs/02-architecture.md
+/// §2.3): builds the pile via `ReviewQueue.gatePile`, serves every card in its
+/// OWN answer mode — self-graded cards are allowed in the gate (cheating
+/// through those is accepted by design; the pile's recall minimum keeps some
+/// genuine recall in every unlock) — and on completion records the TimeCredit,
+/// lifts the shield, and schedules re-lock. Missed cards go to the back of the
+/// pile and come around again until answered correctly.
 @MainActor
 final class GateViewModel: ObservableObject {
     @Published private(set) var session: GateSession
@@ -17,26 +20,32 @@ final class GateViewModel: ObservableObject {
     private let cardStore: CardStore
     private let sharedStore: SharedStore
     private let engine = QuizEngine()
-    private var pool: [Card] = []
-    private var poolIndex = 0
     private var currentCard: Card?
+    /// Cards whose first attempt has been consumed. Only the FIRST answer per
+    /// card feeds FSRS (and only if the card was due); requeued re-asks and
+    /// padding cards are quiz-only — repeatedly grading them would corrupt
+    /// their memory state via the same-day update path (ReviewQueue docs).
+    private var gradedCardIDs: Set<UUID> = []
 
     init(cardStore: CardStore, sharedStore: SharedStore, now: Date = Date()) {
         self.cardStore = cardStore
         self.sharedStore = sharedStore
         let policy = sharedStore.unlockPolicy
-        session = GateSession(policy: policy, startedAt: now)
 
-        if !sharedStore.ledger.canStartSession(policy: policy, at: now) {
+        guard sharedStore.ledger.canStartSession(policy: policy, at: now) else {
+            session = GateSession(policy: policy, pile: [], startedAt: now)
             blockedReason = "You've used all of today's unlocks. Try again tomorrow."
             return
         }
-        pool = ReviewQueue.gatePool(
+
+        let pile = ReviewQueue.gatePile(
             from: cardStore.cards,
-            minimumCount: policy.maxRequiredCorrect,
+            count: policy.cardCount,
+            minimumRecall: policy.minimumRecallCards,
             at: now
         )
-        if pool.isEmpty {
+        session = GateSession(policy: policy, pile: pile.map(\.id), startedAt: now)
+        guard !pile.isEmpty else {
             blockedReason = "Add some flashcards before you can earn time back."
             return
         }
@@ -44,6 +53,24 @@ final class GateViewModel: ObservableObject {
     }
 
     // MARK: - Answers
+
+    /// Self-graded cards in the gate offer exactly two honesty buttons:
+    /// Again (missed — back of the pile) and Good (cleared).
+    func submitSelfGraded(_ rating: Rating) {
+        guard let card = currentCard else { return }
+        let now = Date()
+        let graded = GradedAnswer(isCorrect: rating != .again)
+        gradeFirstAttempt(card: card, rating: rating, at: now)
+
+        if let credit = session.submit(graded, at: now) {
+            complete(with: credit, now: now)
+        } else if graded.isCorrect {
+            // The reveal already showed the answer; no feedback screen needed.
+            advance()
+        } else {
+            feedback = .requeued(correctAnswer: card.back)
+        }
+    }
 
     func submitChoice(_ index: Int) {
         guard let card = currentCard, let question else { return }
@@ -68,28 +95,29 @@ final class GateViewModel: ObservableObject {
 
     private func submit(_ graded: GradedAnswer, card: Card) {
         let now = Date()
-        // Only answers on cards that were actually due feed FSRS; padding
-        // cards are quiz-only — repeatedly grading not-due cards would corrupt
-        // their memory state via the same-day update path (ReviewQueue docs).
-        if card.isDue(at: now) {
-            let fsrs = FSRS(
-                desiredRetention: cardStore.deck(withID: card.deckID)?.requestedRetention ?? 0.9
-            )
-            let result = fsrs.review(
-                card: card, rating: graded.suggestedRating, at: now, inGateSession: true
-            )
-            cardStore.apply(result.card, log: result.log)
-        }
+        gradeFirstAttempt(card: card, rating: graded.suggestedRating, at: now)
 
         if graded.isCorrect {
             feedback = graded.wasFuzzyMatch ? .fuzzy(correctAnswer: card.back) : .correct
         } else {
-            feedback = .incorrect(correctAnswer: card.back)
+            feedback = .requeued(correctAnswer: card.back)
         }
 
         if let credit = session.submit(graded, at: now) {
             complete(with: credit, now: now)
         }
+    }
+
+    private func gradeFirstAttempt(card: Card, rating: Rating, at now: Date) {
+        guard !gradedCardIDs.contains(card.id) else { return }
+        gradedCardIDs.insert(card.id)
+        guard card.isDue(at: now) else { return }
+
+        let fsrs = FSRS(
+            desiredRetention: cardStore.deck(withID: card.deckID)?.requestedRetention ?? 0.9
+        )
+        let result = fsrs.review(card: card, rating: rating, at: now, inGateSession: true)
+        cardStore.apply(result.card, log: result.log)
     }
 
     private func complete(with credit: TimeCredit, now: Date) {
@@ -110,22 +138,22 @@ final class GateViewModel: ObservableObject {
         earnedCredit = credit
     }
 
+    /// Serves the pile's front card (from `session.currentCardID`) in the
+    /// card's own answer mode.
     private func advance() {
         feedback = nil
-        guard session.status == .inProgress, !pool.isEmpty else { return }
-        // Cycle through the pool; sessions can need more answers than there
-        // are cards (wrong-answer penalties), so cards may repeat. Always take
-        // the freshest copy so a mid-session FSRS update is respected.
-        let stale = pool[poolIndex % pool.count]
-        poolIndex += 1
-        let card = cardStore.cards.first { $0.id == stale.id } ?? stale
+        guard let cardID = session.currentCardID,
+              let card = cardStore.cards.first(where: { $0.id == cardID }) else {
+            currentCard = nil
+            question = nil
+            return
+        }
         currentCard = card
 
         var generator = SystemRandomNumberGenerator()
         question = engine.makeQuestion(
             for: card,
             pool: cardStore.cards.filter { $0.deckID == card.deckID },
-            forceRecall: true,
             using: &generator
         )
     }

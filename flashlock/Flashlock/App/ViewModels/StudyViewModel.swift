@@ -7,6 +7,8 @@ enum AnswerFeedback: Equatable {
     /// Typed answer matched within edit-distance tolerance only.
     case fuzzy(correctAnswer: String)
     case incorrect(correctAnswer: String)
+    /// Gate-only: wrong answer, and the card went to the back of the pile.
+    case requeued(correctAnswer: String)
 }
 
 /// Free-study session over one deck: builds the Anki-style queue, renders one
@@ -45,7 +47,8 @@ final class StudyViewModel: ObservableObject {
 
     // MARK: - Answers
 
-    /// Self-graded reveal: the user picked their own rating, no feedback screen.
+    /// Self-graded reveal: the UI offers two buttons, Again (`.again`) and
+    /// Good (`.good`); no feedback screen.
     func submitSelfGraded(_ rating: Rating) {
         guard let card = currentCard else { return }
         review(card: card, rating: rating)

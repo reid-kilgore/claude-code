@@ -3,9 +3,9 @@ import FlashlockCore
 import SwiftUI
 import UserNotifications
 
-/// First-run setup: Screen Time authorization, app selection, and the daily
-/// limit. Policy defaults come from `UnlockPolicy()` and are editable later in
-/// Settings.
+/// First-run setup: Screen Time authorization, app selection, the daily
+/// limit, and the unlock policy (pile size, minutes earned, recall minimum,
+/// daily unlock cap). All of it is editable later in Settings.
 struct OnboardingView: View {
     /// Undocumented ManagedSettings ceiling: shields with more than 50 tokens
     /// silently shield nothing, so enforce at selection time.
@@ -18,6 +18,11 @@ struct OnboardingView: View {
     @State private var selection = FamilyActivitySelection()
     @State private var pickerPresented = false
     @State private var limitMinutes = 60
+    @State private var cardCount = 5
+    @State private var minutesGranted = 15
+    @State private var minimumRecallCards = 2
+    /// 0 means unlimited (`UnlockPolicy.maxUnlocksPerDay == nil`).
+    @State private var maxUnlocksPerDay = 0
 
     private var tooManyApps: Bool {
         selection.applicationTokens.count > Self.maxShieldedApps
@@ -27,7 +32,7 @@ struct OnboardingView: View {
         NavigationStack {
             Form {
                 Section {
-                    Text("Flashlock blocks your chosen apps after a daily limit. Earn time back by answering flashcards.")
+                    Text("Flashlock blocks your chosen apps after a daily limit. Earn time back by clearing a pile of flashcards.")
                         .font(.callout)
                 }
 
@@ -68,6 +73,34 @@ struct OnboardingView: View {
                     )
                 }
 
+                Section("4. Earning time back") {
+                    Stepper(
+                        "Cards in the pile: \(cardCount)",
+                        value: $cardCount,
+                        in: 1...50
+                    )
+                    Stepper(
+                        "Earns \(minutesGranted) minutes",
+                        value: $minutesGranted,
+                        in: 1...60
+                    )
+                    Stepper(
+                        "Recall cards required: \(min(minimumRecallCards, cardCount))",
+                        value: $minimumRecallCards,
+                        in: 0...cardCount
+                    )
+                    Stepper(
+                        maxUnlocksPerDay == 0
+                            ? "Unlimited unlocks per day"
+                            : "\(maxUnlocksPerDay) unlocks per day",
+                        value: $maxUnlocksPerDay,
+                        in: 0...20
+                    )
+                    Text("Clear a pile of \(cardCount) cards to earn \(minutesGranted) minutes. Missed cards go to the back of the pile.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+
                 Section {
                     Button("Start") { finish() }
                         .disabled(
@@ -102,7 +135,12 @@ struct OnboardingView: View {
         let config = LimitConfig(dailyLimitMinutes: limitMinutes, isEnabled: true)
         store.selection = selection
         store.limitConfig = config
-        store.unlockPolicy = UnlockPolicy()
+        store.unlockPolicy = UnlockPolicy(
+            cardCount: cardCount,
+            minutesGranted: minutesGranted,
+            minimumRecallCards: min(minimumRecallCards, cardCount),
+            maxUnlocksPerDay: maxUnlocksPerDay == 0 ? nil : maxUnlocksPerDay
+        )
 
         try? DailyLimitScheduler.schedule(selection: selection, config: config)
 

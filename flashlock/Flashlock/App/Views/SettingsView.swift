@@ -9,10 +9,9 @@ struct SettingsView: View {
 
     @State private var isEnabled = true
     @State private var limitMinutes = 60
-    @State private var requiredCorrect = 5
+    @State private var cardCount = 5
     @State private var minutesGranted = 15
-    @State private var wrongAnswerPenalty = 1
-    @State private var maxRequiredCorrect = 12
+    @State private var minimumRecallCards = 2
     /// 0 means unlimited (`UnlockPolicy.maxUnlocksPerDay == nil`).
     @State private var maxUnlocksPerDay = 0
     @State private var selection = FamilyActivitySelection()
@@ -45,8 +44,8 @@ struct SettingsView: View {
 
             Section("Unlock policy") {
                 Stepper(
-                    "\(requiredCorrect) correct answers",
-                    value: $requiredCorrect,
+                    "Cards in the pile: \(cardCount)",
+                    value: $cardCount,
                     in: 1...50
                 )
                 Stepper(
@@ -55,14 +54,9 @@ struct SettingsView: View {
                     in: 1...60
                 )
                 Stepper(
-                    "+\(wrongAnswerPenalty) cards per wrong answer",
-                    value: $wrongAnswerPenalty,
-                    in: 0...5
-                )
-                Stepper(
-                    "At most \(maxRequiredCorrect) cards per session",
-                    value: $maxRequiredCorrect,
-                    in: 1...50
+                    "Recall cards required: \(min(minimumRecallCards, cardCount))",
+                    value: $minimumRecallCards,
+                    in: 0...cardCount
                 )
                 Stepper(
                     maxUnlocksPerDay == 0
@@ -71,6 +65,9 @@ struct SettingsView: View {
                     value: $maxUnlocksPerDay,
                     in: 0...20
                 )
+                Text("Clear a pile of \(cardCount) cards to earn \(minutesGranted) minutes. Missed cards go to the back of the pile.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
             }
 
             Section {
@@ -95,10 +92,9 @@ struct SettingsView: View {
         let policy = store.unlockPolicy
         isEnabled = config.isEnabled
         limitMinutes = config.dailyLimitMinutes
-        requiredCorrect = policy.requiredCorrect
+        cardCount = policy.cardCount
         minutesGranted = policy.minutesGranted
-        wrongAnswerPenalty = policy.wrongAnswerPenalty
-        maxRequiredCorrect = policy.maxRequiredCorrect
+        minimumRecallCards = policy.minimumRecallCards
         maxUnlocksPerDay = policy.maxUnlocksPerDay ?? 0
         selection = store.selection ?? FamilyActivitySelection()
     }
@@ -109,10 +105,9 @@ struct SettingsView: View {
         store.limitConfig = config
         store.selection = selection
         store.unlockPolicy = UnlockPolicy(
-            requiredCorrect: requiredCorrect,
+            cardCount: cardCount,
             minutesGranted: minutesGranted,
-            wrongAnswerPenalty: wrongAnswerPenalty,
-            maxRequiredCorrect: max(maxRequiredCorrect, requiredCorrect),
+            minimumRecallCards: min(minimumRecallCards, cardCount),
             maxUnlocksPerDay: maxUnlocksPerDay == 0 ? nil : maxUnlocksPerDay
         )
 

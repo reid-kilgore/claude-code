@@ -1,9 +1,10 @@
 import FlashlockCore
 import SwiftUI
 
-/// The earn-back gate: same question UI as free study, but with session
-/// progress, a remaining-answers count, and a completion screen showing the
-/// minutes granted. Presented full-screen from the shield/notification path.
+/// The earn-back gate: same question UI as free study, but with pile progress
+/// (cleared/total), missed-card requeue feedback, and a completion screen
+/// showing the minutes granted. Presented full-screen from the
+/// shield/notification path.
 struct GateSessionView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var model: GateViewModel
@@ -44,13 +45,14 @@ struct GateSessionView: View {
         VStack {
             ProgressView(value: model.session.progress)
                 .padding(.horizontal)
-            Text("\(model.session.remaining) correct answers to go")
+            Text("\(model.session.clearedCount) of \(model.session.totalCards) cleared \u{00B7} \(model.session.remaining) to go")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
             Spacer()
             QuestionView(
                 question: question,
                 feedback: model.feedback,
+                onSelfGrade: { model.submitSelfGraded($0) },
                 onChoice: { model.submitChoice($0) },
                 onTyped: { model.submitTyped($0) },
                 onContinue: { model.continueAfterFeedback() }

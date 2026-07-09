@@ -7,8 +7,8 @@ import SwiftUI
 struct QuestionView: View {
     let question: QuizQuestion
     let feedback: AnswerFeedback?
-    /// Ignored for recall questions; gate sessions never serve self-graded
-    /// cards (`forceRecall` upgrades them), so a no-op default is safe there.
+    /// Called with `.again` or `.good` — self-graded cards show exactly those
+    /// two buttons, in free study and in the gate alike.
     var onSelfGrade: (Rating) -> Void = { _ in }
     let onChoice: (Int) -> Void
     let onTyped: (String) -> Void
@@ -22,12 +22,15 @@ struct QuestionView: View {
             switch question {
             case let .selfGraded(_, front, back):
                 prompt(front)
-                if revealed {
+                if let feedback {
+                    // Gate-only: "Again" requeues the card and explains so.
+                    feedbackView(feedback)
+                } else if revealed {
                     Divider()
                     Text(back)
                         .font(.title3)
                         .multilineTextAlignment(.center)
-                    ratingButtons
+                    gradeButtons
                 } else {
                     Button("Show answer") { revealed = true }
                         .buttonStyle(.borderedProminent)
@@ -79,16 +82,16 @@ struct QuestionView: View {
             .frame(maxWidth: .infinity)
     }
 
-    private var ratingButtons: some View {
+    /// Two honesty buttons only; `Rating.hard`/`.easy` still exist in the
+    /// model but are no longer offered in the UI.
+    private var gradeButtons: some View {
         HStack(spacing: 12) {
-            ratingButton("Again", .again, tint: .red)
-            ratingButton("Hard", .hard, tint: .orange)
-            ratingButton("Good", .good, tint: .green)
-            ratingButton("Easy", .easy, tint: .blue)
+            gradeButton("Again", .again, tint: .red)
+            gradeButton("Good", .good, tint: .green)
         }
     }
 
-    private func ratingButton(_ title: String, _ rating: Rating, tint: Color) -> some View {
+    private func gradeButton(_ title: String, _ rating: Rating, tint: Color) -> some View {
         Button(title) { onSelfGrade(rating) }
             .buttonStyle(.bordered)
             .tint(tint)
@@ -112,6 +115,12 @@ struct QuestionView: View {
                     .foregroundStyle(.red)
                     .font(.title3)
                 Text("The answer is \u{201C}\(correctAnswer)\u{201D}")
+                    .multilineTextAlignment(.center)
+            case let .requeued(correctAnswer):
+                Label("Back in the pile", systemImage: "arrow.uturn.backward.circle.fill")
+                    .foregroundStyle(.red)
+                    .font(.title3)
+                Text("The answer is \u{201C}\(correctAnswer)\u{201D} — this card comes around again.")
                     .multilineTextAlignment(.center)
             }
             Button("Continue") { onContinue() }

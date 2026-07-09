@@ -42,7 +42,7 @@ struct CardEditorView: View {
                     }
                     .pickerStyle(.segmented)
                     if answerMode == .selfGraded {
-                        Text("Self-graded cards are upgraded to multiple choice during unlock sessions.")
+                        Text("In unlock sessions, self-graded cards use the same Again/Good buttons; a missed card goes back in the pile.")
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                     }

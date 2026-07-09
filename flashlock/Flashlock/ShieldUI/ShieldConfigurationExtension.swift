@@ -39,7 +39,7 @@ final class ShieldConfigurationExtension: ShieldConfigurationDataSource {
         let policy = SharedStore().unlockPolicy
         let title = ShieldConfiguration.Label(text: "Time's up", color: .white)
         let subtitle = ShieldConfiguration.Label(
-            text: "Answer \(policy.requiredCorrect) cards to earn "
+            text: "Clear \(policy.cardCount) cards to earn "
                 + "\(policy.minutesGranted) more minutes",
             color: .white
         )
