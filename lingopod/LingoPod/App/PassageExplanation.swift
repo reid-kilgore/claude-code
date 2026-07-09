@@ -17,8 +17,13 @@
 // do not restructure around a guess.
 import FoundationModels
 
+// VERIFY(iOS26): Codable conformance is required by M6's cache
+// (ExplainService encodes/decodes this via JSONEncoder into
+// ExplanationCacheEntry.explanationJSON). If @Generable's macro expansion
+// conflicts with synthesized Codable, replace with a hand-written
+// CodingKeys/init(from:)/encode(to:) here rather than changing M6.
 @Generable
-struct PassageExplanation {
+struct PassageExplanation: Codable {
     @Guide(description: "Natural translation of the passage into the target language")
     var translation: String
     @Guide(description: "2-4 sentence explanation of overall meaning, in the target language")

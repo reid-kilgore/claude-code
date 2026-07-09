@@ -25,12 +25,8 @@ final class AppContainer {
     /// existential and still participate in view invalidation the way a
     /// concrete `@Observable` class can (architecture §11.10). Views that
     /// need protocol-only access can still type a parameter as
-    /// `any PlayerEngineProtocol`; `AppContainer` itself keeps the concrete
-    /// type for observation to work. M2 replaces `MockPlayerEngine` with
-    /// the real `PlayerEngine` class here without changing this property's
-    /// declared type, only if the real type also conforms; if not, adjust
-    /// then and note why in this file.
-    var playerEngine: MockPlayerEngine
+    /// `any PlayerEngineProtocol`.
+    var playerEngine: PlayerEngine
 
     /// Optional-capability accessors (architecture §11.5): additive
     /// protocols aren't part of the base §5 service protocols, so they're
@@ -63,10 +59,28 @@ final class AppContainer {
             fatalError("Failed to create ModelContainer: \(error)")
         }
 
-        self.catalogService = MockCatalogService()
-        self.translationService = MockTranslationService()
-        self.explainService = MockExplainService()
-        self.transcriptProvider = MockTranscriptProvider()
-        self.playerEngine = MockPlayerEngine()
+        let catalog = MockCatalogService() // M1 wiring pending
+        self.catalogService = catalog
+
+        // M5
+        self.translationService = TranslationService(
+            cache: TranslationCacheStore(modelContainer: modelContainer)
+        )
+
+        // M6
+        let explain = ExplainService(
+            cacheStore: ExplanationCacheStore(modelContainer: modelContainer)
+        )
+        explain.refreshAvailability()
+        self.explainService = explain
+
+        self.transcriptProvider = MockTranscriptProvider() // M3 wiring pending
+
+        // M2
+        self.playerEngine = PlayerEngine(
+            modelContext: modelContainer.mainContext,
+            positionStore: PlaybackPositionStore(modelContext: modelContainer.mainContext),
+            catalogService: catalog
+        )
     }
 }

@@ -25,6 +25,9 @@ struct RootView: View {
                                       // replace with a GeometryReader-based
                                       // measurement instead of a constant.
         }
+        // M5: invisible host for the Translation framework's
+        // .translationTask session lifecycle (see TranslationHostView).
+        .background(TranslationHostView())
     }
 }
 

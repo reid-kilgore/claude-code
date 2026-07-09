@@ -100,25 +100,8 @@ final class MockTranslationService: TranslationServiceProtocol, TranslationDownl
 }
 
 // MARK: - Explain (M6)
-
-/// Also conforms to `TranslationFallbackProviding` (architecture §11.5)
-/// as a no-op, for the same reason as `MockTranslationService` above.
-final class MockExplainService: ExplainServiceProtocol, TranslationFallbackProviding {
-    var availability: ExplainAvailability {
-        .unavailable(reason: "Not implemented yet.")
-    }
-
-    func explain(passage: String, context: String, sourceLanguage: Locale.Language,
-                 targetLanguage: Locale.Language) -> AsyncThrowingStream<PassageExplanation.PartiallyGenerated, Error> {
-        AsyncThrowingStream { continuation in
-            continuation.finish(throwing: MockServiceError.notImplemented)
-        }
-    }
-
-    func translateFallback(text: String, from source: Locale.Language, to target: Locale.Language) async throws -> String {
-        throw MockServiceError.notImplemented
-    }
-}
+// M0's placeholder was removed when M6 landed: the real preview/test mock
+// with canned streaming lives at LingoPod/Intelligence/MockExplainService.swift.
 
 // MARK: - Transcripts (M3)
 
