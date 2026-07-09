@@ -177,19 +177,21 @@ is status-only by design — see the header comment in
 
 #### Why `translate-check` can't do a real translation
 
-Apple's `TranslationSession` — the type that actually runs a translation or
-drives an on-device language-pack download — has no documented headless
-initializer; it's only obtainable via the SwiftUI `.translationTask(_:_:)`
-view modifier, which requires a live view hierarchy. A macOS CLI with no
-SwiftUI scene has nothing to attach that modifier to. This spike therefore
-only proves the one piece of M5's `TranslationServiceProtocol` that *is*
-reachable headlessly: `availability(from:to:)`, backed by
-`LanguageAvailability.status(from:to:)`. **This confirms architecture §5.3's
-own note is correct as written** — M5's spec already anticipates needing "a
-host-view pattern that adapts \[`.translationTask`\] to the async protocol,"
-i.e. some small SwiftUI view (even an off-screen one) that M5's concrete
-`TranslationService` drives programmatically. Nothing in this spike
-contradicts that; it just confirms there's no shortcut around it.
+Correction (per docs/02-feasibility.md, Pillar 3): as of iOS/macOS 26,
+`TranslationSession` DOES have a headless initializer —
+`init(installedSource:target:)` — but it throws unless the language pair is
+already installed, and it cannot prompt the pack-download permission UI.
+Downloads remain exclusively behind the SwiftUI `.translationTask(_:_:)`
+view modifier, which requires a live view hierarchy a CLI doesn't have.
+This spike therefore proves `availability(from:to:)` (backed by
+`LanguageAvailability.status(from:to:)`) and stops there. Architecture
+§5.3's host-view pattern in M5 remains required for the download flow;
+`init(installedSource:target:)` is noted in docs/02-feasibility.md as a
+v1.1 simplification for the already-installed hot path. If your Mac already
+has the es→en pack installed (System Settings → Language & Region →
+Translation Languages), you can optionally extend `translate-check` with a
+real one-off translation via the new initializer to prove end-to-end
+translation too.
 
 ## PASS/FAIL rubric
 
