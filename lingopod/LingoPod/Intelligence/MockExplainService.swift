@@ -20,6 +20,7 @@
 // ... its corresponding mock as it lands the real service").
 import Foundation
 
+@MainActor
 final class MockExplainService: ExplainServiceProtocol, TranslationFallbackProviding {
 
     /// Selects which canned behavior `explain()` produces. Defaults to a
@@ -132,3 +133,7 @@ final class MockExplainService: ExplainServiceProtocol, TranslationFallbackProvi
         }
     }
 }
+
+// Same rationale as `ExplainService`'s conformance: `ExplainServiceProtocol`
+// refines `Sendable`; the mock's mutable state is MainActor-serialized.
+extension MockExplainService: @unchecked Sendable {}

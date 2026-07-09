@@ -12,7 +12,6 @@ import LingoPodKit
 import SwiftData
 import Testing
 
-@MainActor
 private actor RecordingCatalogService: CatalogServiceProtocol {
     private(set) var downloadCallCount = 0
     private(set) var lastDownloadedEpisodeID: PersistentIdentifier?

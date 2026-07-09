@@ -78,3 +78,20 @@ their supporting enums) is implemented by M0 itself per architecture
 §11.1 — this is a deliberate deviation from the M0 spec's original text,
 which assumed M1 would own the model definitions. See
 `docs/01-architecture.md` §11.1 for the reconciliation decision.
+
+## First-build checkpoints (authored without a compiler)
+
+This tree was written in a Linux container with no Swift toolchain; it has
+never been compiled. Beyond fixing whatever the compiler reports (grep
+`VERIFY(iOS26)` for the known-uncertain API spellings, each isolated in a
+thin wrapper), one project-level setting deserves a deliberate look on
+first build: `project.yml` sets `SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor`
+for the app target, while several `Sendable` value types declared there
+(`TranscriptSegmentSnapshot`, `PodcastSearchResult`, `PlaybackError`, and
+`TranscriptStore`'s DTOs) are constructed synchronously from non-main
+actors (`TranscriptWriter`, `CatalogService`, `TranscriptionEngine`). If
+default-isolation inference makes those initializers MainActor-isolated,
+either annotate those types `nonisolated` or drop the project-level
+default — prefer the former, it's surgical. Run `swift test` inside
+`LingoPodKit/` first: it compiles without Xcode and validates all parsers,
+the segment normalizer, and time math before you touch the app target.

@@ -65,6 +65,15 @@ final class AppContainer {
         self.catalogService = catalog
         Task { await downloadCoordinator.attach(catalogService: catalog) }
 
+        // Background-session relaunch handshake (M1 spec §8.5): register the
+        // coordinator with AppDelegate and drain any handler that arrived
+        // before this container existed.
+        AppDelegate.downloadCoordinator = downloadCoordinator
+        if let pending = AppDelegate.pendingBackgroundCompletionHandler {
+            AppDelegate.pendingBackgroundCompletionHandler = nil
+            Task { await downloadCoordinator.attach(backgroundCompletionHandler: pending) }
+        }
+
         // M5
         self.translationService = TranslationService(
             cache: TranslationCacheStore(modelContainer: modelContainer)

@@ -427,3 +427,9 @@ extension ExplainService {
         }
     }
 }
+
+// Swift 6 does not synthesize `Sendable` for classes (even `@MainActor`
+// ones), but `ExplainServiceProtocol` refines `Sendable` — mirror the
+// documented `TranslationService` pattern: all mutable state is
+// MainActor-serialized, so the unchecked conformance is sound.
+extension ExplainService: @unchecked Sendable {}
