@@ -405,3 +405,17 @@ section wins.
     as segment-break hints and then discarded — candidate v2 model field.
 14. **`ExplainServiceProtocol.availability`** stays a plain getter in v1;
     M4 may poll (≤0.5 Hz) while an explain sheet shows `modelNotReady`.
+15. **Transcripts are compute-once, stored forever; transcription is
+    resumable.** (Supersedes M3's spec §"resume-after-kill = re-transcribe
+    from scratch".) Finalized segments are durable the moment their batch
+    commits; a `Transcript` in state `.partial` found at provider startup
+    RESUMES: feed audio to the analyzer starting at
+    `lastSegment.endTime - 2s`, drop newly produced segments that end
+    before `lastSegment.endTime`, continue appending. Full re-transcription
+    happens only via explicit `invalidateAndRetranscribe`, a changed audio
+    file, or a changed resolved locale. Completed transcripts, translation
+    cache entries, and explanation cache entries are never evicted in v1
+    except by episode deletion (cascade) or cache-cap pruning (§ M5).
+16. **Feasibility gate:** `docs/02-feasibility.md` + `spikes/` prove the
+    transcription and LLM pillars on real hardware before M3/M4 code is
+    trusted; `VERIFY(iOS26)` markers in app code map to spike checks.
