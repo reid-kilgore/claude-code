@@ -2,8 +2,10 @@
 
 An iOS app that couples a screen-time blocker (à la Brick / Focus Friend) with an
 Anki-style spaced-repetition flashcard app: when your selected apps hit their
-daily limit they lock, and the only way to earn more time is to **correctly
-answer flashcards** — multiple choice or typed recall, so you can't mash through.
+daily limit they lock, and the only way to earn more time is to **clear a pile
+of flashcards** — missed cards go back in the pile until you get them right,
+and every pile includes recall cards (multiple choice or typed) you can't mash
+through.
 
 ## What's in this directory
 

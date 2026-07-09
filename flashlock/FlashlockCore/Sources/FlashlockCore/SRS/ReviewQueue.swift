@@ -26,34 +26,55 @@ public enum ReviewQueue {
         return learning + review + Array(fresh)
     }
 
-    /// Cards eligible for an unlock-gate session: prefer due cards so gated
-    /// reviews advance the user's real study schedule; pad with not-yet-due
-    /// review cards if the due queue is short.
+    /// Builds the pile for an unlock-gate session: `count` cards, due cards
+    /// first (so gated reviews advance the user's real study schedule), padded
+    /// with not-yet-due review cards and then new cards when the due queue is
+    /// short.
     ///
-    /// IMPORTANT: only answers on cards that were actually due should be fed
-    /// back into FSRS as graded reviews (check `card.isDue(at:)` before calling
-    /// `FSRS.review`). Padding cards are quiz-only — repeatedly grading not-due
-    /// cards would corrupt their memory state via the same-day update path.
-    public static func gatePool(
+    /// Cards keep their own answer mode in the gate — self-graded cards are
+    /// allowed (cheating through those is accepted) — but the pile includes at
+    /// least `minimumRecall` recall-mode cards when the collection has them,
+    /// so clearing it always takes some genuine recall.
+    ///
+    /// IMPORTANT: only the FIRST answer on a card that was actually due should
+    /// be fed back into FSRS as a graded review (check `card.isDue(at:)`).
+    /// Requeued re-asks and padding cards are quiz-only — repeatedly grading
+    /// them would corrupt their memory state via the same-day update path.
+    public static func gatePile(
         from cards: [Card],
-        minimumCount: Int,
+        count: Int,
+        minimumRecall: Int,
         at date: Date
     ) -> [Card] {
         let active = cards.filter { !$0.suspended }
-        var pool = active.filter { $0.phase != .new && $0.isDue(at: date) }
+        // Candidates in priority order: due, then not-yet-due review, then new.
+        let due = active.filter { $0.phase != .new && $0.isDue(at: date) }
             .sorted { $0.due < $1.due }
+        let upcoming = active.filter { $0.phase == .review && !$0.isDue(at: date) }
+            .sorted { $0.due < $1.due }
+        let fresh = active.filter { $0.phase == .new }
+        let ranked = due + upcoming + fresh
 
-        if pool.count < minimumCount {
-            let padding = active
-                .filter { card in card.phase == .review && !pool.contains(where: { $0.id == card.id }) }
-                .sorted { $0.due < $1.due }
-                .prefix(minimumCount - pool.count)
-            pool.append(contentsOf: padding)
+        var pile = Array(ranked.prefix(count))
+
+        // Swap in recall cards (from the same priority order) until the
+        // minimum is met or the collection runs out of them.
+        let isRecall = { (c: Card) in c.answerMode != .selfGraded }
+        var recallCount = pile.filter(isRecall).count
+        if recallCount < minimumRecall {
+            let reserves = ranked.filter { candidate in
+                isRecall(candidate) && !pile.contains { $0.id == candidate.id }
+            }
+            var reserveIndex = 0
+            for i in pile.indices.reversed() where recallCount < minimumRecall {
+                guard reserveIndex < reserves.count else { break }
+                if !isRecall(pile[i]) {
+                    pile[i] = reserves[reserveIndex]
+                    reserveIndex += 1
+                    recallCount += 1
+                }
+            }
         }
-        if pool.count < minimumCount {
-            let fresh = active.filter { $0.phase == .new }.prefix(minimumCount - pool.count)
-            pool.append(contentsOf: fresh)
-        }
-        return pool
+        return pile
     }
 }

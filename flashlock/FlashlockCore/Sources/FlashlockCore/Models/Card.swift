@@ -1,12 +1,14 @@
 import Foundation
 
-/// How a card prompts for its answer during a gated (unlock) session.
+/// How a card prompts for its answer.
 ///
-/// Recall types are the anti-spam mechanism: the user must produce or select the
-/// correct answer, so mashing "Good" doesn't earn screen time.
+/// Recall types are the "harder gates": the user must produce or select the
+/// correct answer, so an unlock can't be earned by mashing alone. Gate piles
+/// mix modes freely but guarantee a minimum of recall cards
+/// (`UnlockPolicy.minimumRecallCards`).
 public enum AnswerMode: String, Codable, Sendable, CaseIterable {
-    /// Classic Anki-style self-graded reveal. Allowed in free study, never counts
-    /// toward an unlock gate.
+    /// Classic Anki-style self-graded reveal (Again / Good). Allowed everywhere,
+    /// including gate piles — cheating through these is tolerated by design.
     case selfGraded
     /// Pick the correct answer among generated distractors.
     case multipleChoice

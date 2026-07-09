@@ -2,29 +2,27 @@ import Foundation
 
 /// User-configurable rule for how flashcards convert into screen time.
 public struct UnlockPolicy: Codable, Equatable, Sendable {
-    /// Correct answers required to earn one grant.
-    public var requiredCorrect: Int
-    /// Minutes of access earned per completed session.
+    /// Cards in the gate pile. The pile must be fully cleared to earn the grant.
+    public var cardCount: Int
+    /// Minutes of access earned per cleared pile.
     public var minutesGranted: Int
-    /// Each wrong answer adds this many extra required cards (anti-spam:
-    /// guessing through multiple choice has negative expected value).
-    public var wrongAnswerPenalty: Int
-    /// Cap on `requiredCorrect + penalties` so a bad run stays finishable.
-    public var maxRequiredCorrect: Int
+    /// Minimum recall-mode (objectively graded) cards in the pile, when the
+    /// collection has them. Self-graded cards are welcome in the pile — cheating
+    /// through those is accepted — but these "harder gates" guarantee the unlock
+    /// always takes some genuine recall.
+    public var minimumRecallCards: Int
     /// Grants allowed per calendar day; nil = unlimited.
     public var maxUnlocksPerDay: Int?
 
     public init(
-        requiredCorrect: Int = 5,
+        cardCount: Int = 5,
         minutesGranted: Int = 15,
-        wrongAnswerPenalty: Int = 1,
-        maxRequiredCorrect: Int = 12,
+        minimumRecallCards: Int = 2,
         maxUnlocksPerDay: Int? = nil
     ) {
-        self.requiredCorrect = requiredCorrect
+        self.cardCount = cardCount
         self.minutesGranted = minutesGranted
-        self.wrongAnswerPenalty = wrongAnswerPenalty
-        self.maxRequiredCorrect = maxRequiredCorrect
+        self.minimumRecallCards = minimumRecallCards
         self.maxUnlocksPerDay = maxUnlocksPerDay
     }
 }
@@ -43,11 +41,10 @@ public struct TimeCredit: Codable, Equatable, Sendable {
     }
 }
 
-/// State machine for one "answer cards to unlock" session.
-///
-/// Only objectively-graded answers (multiple choice / typed) feed this — the
-/// quiz layer upgrades self-graded cards to multiple choice when
-/// `forceRecall` is set, so "Good"-mashing can never mint screen time.
+/// State machine for one "clear the pile to unlock" session, with Anki-style
+/// requeueing: a missed card goes to the back of the pile and comes around
+/// again until it is answered correctly. The session completes — and pays out —
+/// only when the pile is empty.
 public struct GateSession: Codable, Equatable, Sendable {
     public enum Status: String, Codable, Sendable {
         case inProgress
@@ -57,44 +54,49 @@ public struct GateSession: Codable, Equatable, Sendable {
 
     public private(set) var policy: UnlockPolicy
     public private(set) var startedAt: Date
-    public private(set) var correctCount: Int = 0
-    public private(set) var wrongCount: Int = 0
-    public private(set) var status: Status = .inProgress
+    /// Remaining card IDs; the first element is the card currently being asked.
+    public private(set) var pile: [UUID]
+    public let totalCards: Int
+    public private(set) var missCount: Int = 0
+    public private(set) var status: Status
 
-    public init(policy: UnlockPolicy, startedAt: Date) {
+    /// `pile` should come from `ReviewQueue.gatePile`; an empty pile completes
+    /// immediately on the first submit-free check, so callers should not start
+    /// sessions with no cards.
+    public init(policy: UnlockPolicy, pile: [UUID], startedAt: Date) {
         self.policy = policy
+        self.pile = pile
+        self.totalCards = pile.count
         self.startedAt = startedAt
+        self.status = pile.isEmpty ? .completed : .inProgress
     }
 
-    /// Total correct answers currently required, including accrued penalties.
-    public var requiredCorrect: Int {
-        min(
-            policy.requiredCorrect + wrongCount * policy.wrongAnswerPenalty,
-            policy.maxRequiredCorrect
-        )
+    public var currentCardID: UUID? {
+        status == .inProgress ? pile.first : nil
     }
 
-    public var remaining: Int {
-        max(requiredCorrect - correctCount, 0)
-    }
+    public var clearedCount: Int { totalCards - pile.count }
+    public var remaining: Int { pile.count }
 
-    /// Fraction complete in [0, 1], for progress UI.
+    /// Fraction of the pile cleared, in [0, 1], for progress UI.
     public var progress: Double {
-        guard requiredCorrect > 0 else { return 1 }
-        return min(Double(correctCount) / Double(requiredCorrect), 1)
+        guard totalCards > 0 else { return 1 }
+        return Double(clearedCount) / Double(totalCards)
     }
 
-    /// Records one graded answer. Returns a `TimeCredit` when this answer
-    /// completes the session, else nil.
+    /// Records one graded answer for the current (front) card. Correct clears
+    /// the card; wrong sends it to the back of the pile. Returns a `TimeCredit`
+    /// when this answer empties the pile, else nil.
     @discardableResult
     public mutating func submit(_ answer: GradedAnswer, at date: Date) -> TimeCredit? {
-        guard status == .inProgress else { return nil }
-        if answer.isCorrect {
-            correctCount += 1
-        } else {
-            wrongCount += 1
+        guard status == .inProgress, !pile.isEmpty else { return nil }
+        let current = pile.removeFirst()
+        if !answer.isCorrect {
+            missCount += 1
+            pile.append(current)
+            return nil
         }
-        if correctCount >= requiredCorrect {
+        if pile.isEmpty {
             status = .completed
             return TimeCredit(grantedAt: date, minutes: policy.minutesGranted)
         }

@@ -71,11 +71,15 @@ mismatched targets are the most-cited cause of "custom shield never appears".
   `UnlockLedger.canStartSession` allows it.
 
 ### 2.3 Earning time back
-- Gate session (FlashlockCore): serve due cards first (`ReviewQueue.gatePool`),
-  every question in a recall mode (`forceRecall: true` upgrades self-graded cards
-  to multiple choice). Correct answers count toward `requiredCorrect`; wrong
-  answers add penalty cards. Answers on cards that were actually due are also fed
-  to FSRS (`inGateSession: true` in the log); padding cards are quiz-only.
+- Gate session (FlashlockCore): a **pile** of `cardCount` cards built by
+  `ReviewQueue.gatePile` (due cards first; at least `minimumRecallCards`
+  recall-mode cards when the collection has them). Cards are served in their
+  own answer mode — self-graded Again/Good cards are allowed in the pile, and
+  cheating through those is accepted by design. **A miss sends the card to the
+  back of the pile (Anki-style); the pile never grows, and the unlock is
+  earned only when it is empty.** The first attempt on each card that was
+  actually due is also fed to FSRS (`inGateSession: true` in the log);
+  requeued re-asks and padding cards are quiz-only.
 - On completion → `TimeCredit` (e.g. 15 min) recorded in the `UnlockLedger`
   (App Group). The app then:
   1. Removes the tokens from `shield.applications` (nil-ing the setting).
@@ -136,14 +140,15 @@ pain point, and the extensions don't need card data.)
   zero divergence (`scripts/fsrs_port_check.py`).
 - `QuizEngine` — multiple-choice generation (same-deck distractors ranked by
   edit-distance similarity with jitter; falls back to typed when the deck is too
-  small; never serves self-graded questions under `forceRecall`) and typed
-  grading (normalization: casefold, diacritic-strip, punctuation/whitespace
-  collapse; Damerau-Levenshtein tolerance scaled to answer length, exact match
-  required for short answers). Auto-grade mapping: wrong → Again, fuzzy → Hard,
-  exact/choice-correct → Good.
-- `GateSession` / `UnlockPolicy` / `TimeCredit` / `UnlockLedger` — the unlock
-  state machine with wrong-answer penalties (guessing has negative expected
-  value), penalty cap, daily unlock cap, and time-windowed credits.
+  small) and typed grading (normalization: casefold, diacritic-strip,
+  punctuation/whitespace collapse; Damerau-Levenshtein tolerance scaled to
+  answer length, exact match required for short answers). Auto-grade mapping:
+  wrong → Again, fuzzy → Hard, exact/choice-correct → Good. In the UI,
+  self-graded cards expose just two buttons (Again / Good).
+- `GateSession` / `UnlockPolicy` / `TimeCredit` / `UnlockLedger` — the
+  pile-based unlock state machine (missed cards requeue Anki-style; the grant
+  is earned when the pile is cleared), the per-pile recall-card minimum, daily
+  unlock cap, and time-windowed credits.
 
 ## 5. Entitlement & distribution reality (plan around this)
 

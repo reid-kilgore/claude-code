@@ -24,8 +24,9 @@ revocation semantics, more App Review scrutiny).
 Setup
 1. As a user I grant Screen Time access (Face ID prompt) during onboarding.
 2. I pick which apps count against my limit (system app picker; up to 50 apps).
-3. I set a daily limit (e.g. 45 min/day) and an unlock deal: **N correct cards →
-   M minutes** (defaults: 5 cards → 15 min), with an optional max unlocks/day.
+3. I set a daily limit (e.g. 45 min/day) and an unlock deal: **clear a pile of
+   N cards → M minutes** (defaults: 5 cards → 15 min), with an optional max
+   unlocks/day.
 
 Blocking
 4. When my selected apps' combined usage hits the limit, they shield with a
@@ -36,19 +37,22 @@ Blocking
    (idempotent reconcile — no stuck shields, no free time).
 
 Gate
-7. In a gate session every question is objectively graded: multiple choice
-   (4 options, plausible same-deck distractors) or typed answer (normalized,
-   typo-tolerant, short answers exact). Self-graded cards are auto-upgraded to
-   multiple choice inside the gate.
-8. Wrong answers raise the requirement (+1 card each, capped), so guessing
-   through 4-option multiple choice has negative expected value.
-9. On success the apps unlock for M minutes and automatically re-lock after.
+7. A gate session is a **pile of N cards, Anki-style: miss a card and it goes
+   to the back of the pile**; the unlock is earned only when the pile is
+   cleared. Misses never grow the pile or shrink the reward.
+8. The pile mixes card styles freely — self-graded (Again/Good) cards are
+   allowed, and cheating through those is accepted — but it always contains at
+   least K recall cards ("harder gates"): multiple choice with plausible
+   same-deck distractors, or typed answers (normalized, typo-tolerant, short
+   answers exact).
+9. On clearing the pile the apps unlock for M minutes and automatically
+   re-lock after.
 
 Flashcards
 10. I get a starter deck; I can create/edit/delete decks and cards (front, back,
     optional alternative answers, answer mode).
-11. I can study anytime for free (Anki-style: self-graded cards show Again /
-    Hard / Good / Easy; recall cards auto-grade). Scheduling is FSRS-6
+11. I can study anytime for free (self-graded cards show just **Again / Good**;
+    recall cards auto-grade). Scheduling is FSRS-6
     (desired retention 0.9, learning steps 1m/10m, relearn 10m) — gate reviews
     of due cards advance the same schedule, so gating never corrupts learning.
 
@@ -71,9 +75,9 @@ Trust
 1. Fresh install → onboarding → authorize → select 2 sacrificial apps → limit
    2 min (dev builds allow tiny limits) → deal 3 cards / 15 min.
 2. Use the apps for 2 minutes → shield appears on both.
-3. Tap "Practice to unlock" → arrive in gate → answer 2 correct + 1 wrong + 2
-   correct (requirement rose to 4 after the miss → still locked) → 4th correct →
-   unlocked, timer visible.
+3. Tap "Practice to unlock" → arrive in gate with a pile of 3 → miss one card
+   (it visibly returns to the pile) → clear the other two → the missed card
+   comes around again → answer it right → unlocked, timer visible.
 4. Apps open normally; after 15 min they shield again without Flashlock running.
 5. Kill Flashlock mid-window, wait past expiry, open a blocked app → shield up.
 6. Next calendar day: usage resets, apps open normally.
@@ -87,6 +91,6 @@ Trust
 | DeviceActivity callbacks missed (well-documented flakiness) | Timestamp-window ledger + idempotent `reconcile()` on every foreground; no state is a bare flag |
 | Distribution entitlement approval takes weeks, silently | File all 4 bundle-ID requests the moment bundle IDs exist; dev builds unblocked meanwhile |
 | Token rotation bug invalidates stored app selections | Generic shield fallback + re-pick prompt |
-| Gate spam (mash through cards) | Recall-only questions, wrong-answer penalties, optional daily unlock cap, min-latency answer buttons (post-MVP polish) |
+| Gate spam (mash through cards) | Missed cards requeue until answered right; a guaranteed minimum of recall cards per pile; optional daily unlock cap; min-latency answer buttons (post-MVP polish). Cheating on self-graded pile cards is tolerated by design |
 | User just revokes Screen Time access | Accepted: this is a commitment device, not a jail. Surface a gentle "recommit" flow on reauthorization |
 | 15-min DeviceActivity minimum vs shorter grants | Grants < 15 min use usage-threshold events instead of wall-clock schedules |

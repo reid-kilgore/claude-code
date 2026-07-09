@@ -23,9 +23,8 @@ var cards = facts.map { Card(deckID: deck.id, front: $0.0, back: $0.1) }
 
 let scheduler = FSRS()
 let quiz = QuizEngine()
-let policy = UnlockPolicy(requiredCorrect: 5, minutesGranted: 15,
-                          wrongAnswerPenalty: 1, maxRequiredCorrect: 12,
-                          maxUnlocksPerDay: 3)
+let policy = UnlockPolicy(cardCount: 5, minutesGranted: 15,
+                          minimumRecallCards: 2, maxUnlocksPerDay: 3)
 var ledger = UnlockLedger()
 
 // The simulated user recalls a studied card correctly 88% of the time.
@@ -73,19 +72,22 @@ for dayNumber in 1...30 {
         var gateClock = evening
         let cravings = Int.random(in: 1...3, using: &rng)
         while ledger.canStartSession(policy: policy, at: gateClock), gates < cravings {
-            var session = GateSession(policy: policy, startedAt: gateClock)
-            let pool = ReviewQueue.gatePool(from: cards, minimumCount: 20, at: gateClock)
-            var poolIndex = 0
-            while session.status == .inProgress {
-                let card = pool[poolIndex % pool.count]
-                poolIndex += 1
-                let question = quiz.makeQuestion(for: card, pool: cards,
-                                                 forceRecall: true, using: &rng)
-                // Simulate: 82% correct on recall questions in the evening.
+            let pile = ReviewQueue.gatePile(from: cards, count: policy.cardCount,
+                                            minimumRecall: policy.minimumRecallCards,
+                                            at: gateClock)
+            guard !pile.isEmpty else { break }
+            var session = GateSession(policy: policy, pile: pile.map(\.id),
+                                      startedAt: gateClock)
+            // Anki-style: a miss requeues the card; only the first attempt on a
+            // due card feeds the real schedule (see ReviewQueue docs).
+            var gradedCardIDs = Set<UUID>()
+            while session.status == .inProgress, let cardID = session.currentCardID {
+                let i = indexOf(cardID)
+                let question = quiz.makeQuestion(for: cards[i], pool: cards, using: &rng)
+                // Simulate: 82% correct on evening gate questions.
                 let graded = GradedAnswer(isCorrect: userAnswers(correctly: 0.82))
-                // Only due cards feed the real schedule (see ReviewQueue docs).
-                let i = indexOf(card.id)
-                if cards[i].isDue(at: gateClock) {
+                if cards[i].isDue(at: gateClock), !gradedCardIDs.contains(cardID) {
+                    gradedCardIDs.insert(cardID)
                     (cards[i], _) = scheduler.review(
                         card: cards[i], rating: graded.suggestedRating,
                         at: gateClock, inGateSession: true)

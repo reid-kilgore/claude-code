@@ -54,8 +54,10 @@ public struct QuizEngine: Sendable {
 
     /// Renders `card` as a question. `pool` supplies distractor candidates for
     /// multiple choice — normally the rest of the card's deck.
-    /// `forceRecall` upgrades self-graded cards to multiple choice (used by the
-    /// unlock gate so every gated card is objectively verifiable).
+    /// `forceRecall` upgrades self-graded cards to multiple choice for callers
+    /// that want every question objectively verifiable; the standard gate flow
+    /// serves cards in their own mode and relies on the pile's recall minimum
+    /// instead.
     public func makeQuestion<G: RandomNumberGenerator>(
         for card: Card,
         pool: [Card],
