@@ -1,0 +1,109 @@
+name: LingoPod
+options:
+  bundleIdPrefix: com.lingopod
+  deploymentTarget:
+    iOS: "26.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: false
+
+configs:
+  Debug: debug
+  Release: release
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    SWIFT_APPROACHABLE_CONCURRENCY: YES
+    SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+    IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+    TARGETED_DEVICE_FAMILY: "1"
+    ENABLE_PREVIEWS: YES
+    ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: YES
+
+packages:
+  LingoPodKit:
+    path: LingoPodKit
+
+targets:
+  LingoPod:
+    type: application
+    platform: iOS
+    sources:
+      # Recursive: includes App/, Services/ (architecture §11.2 — app-target
+      # service implementations land here starting M1), UI/, Resources/.
+      - path: LingoPod
+        excludes:
+          - "**/*.md"
+          - "**/.gitkeep"
+    dependencies:
+      - package: LingoPodKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lingopod.app
+        PRODUCT_NAME: LingoPod
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        SWIFT_EMIT_LOC_STRINGS: YES
+        DEVELOPMENT_ASSET_PATHS: ""
+    info:
+      path: Generated/LingoPod-Info.plist
+      properties:
+        CFBundleDisplayName: LingoPod
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UIBackgroundModes:
+          - audio
+        NSSpeechRecognitionUsageDescription: >-
+          LingoPod transcribes podcast episodes on-device so you can read
+          along and look up words while you listen. Audio never leaves your
+          device.
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: false
+        ITSAppUsesNonExemptEncryption: false
+      entitlements:
+        path: Generated/LingoPod.entitlements
+        properties:
+          com.apple.security.application-groups: []
+    scheme:
+      testTargets:
+        - LingoPodTests
+        - name: LingoPodKitTests
+          parallelizable: true
+      commandLineArguments:
+        "-com.apple.CoreData.ConcurrencyDebug 1": false
+      environmentVariables: {}
+
+  LingoPodTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: LingoPodTests
+    dependencies:
+      - target: LingoPod
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lingopod.app.tests
+
+schemes:
+  LingoPod:
+    build:
+      targets:
+        LingoPod: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - LingoPodTests
+        - LingoPodKitTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release

@@ -1,0 +1,12 @@
+# XcodeGen output
+*.xcodeproj/
+Generated/
+
+# Xcode
+xcuserdata/
+*.xcuserstate
+DerivedData/
+
+# SwiftPM
+.build/
+.swiftpm/
