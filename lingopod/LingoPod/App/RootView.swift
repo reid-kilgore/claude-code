@@ -12,7 +12,7 @@ struct RootView: View {
                     LibraryView()
                 }
                 Tab(RootTab.search.title, systemImage: RootTab.search.systemImage, value: .search) {
-                    SearchPlaceholderView()
+                    SearchView()
                 }
             }
 

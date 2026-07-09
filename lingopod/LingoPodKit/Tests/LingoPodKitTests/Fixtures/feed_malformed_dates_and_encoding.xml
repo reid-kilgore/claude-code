@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+<channel>
+<title>Café Chronique</title>
+<description>Une émission sur le café et la culture.</description>
+<language>fr-FR</language>
+<item>
+<title>Valid RFC822</title>
+<guid>malformed-1</guid>
+<pubDate>Mon, 06 Sep 2021 08:00:00 GMT</pubDate>
+<enclosure url="https://example.com/m/1.mp3" type="audio/mpeg"/>
+</item>
+<item>
+<title>Missing weekday</title>
+<guid>malformed-2</guid>
+<pubDate>06 Sep 2021 08:00:00 GMT</pubDate>
+<enclosure url="https://example.com/m/2.mp3" type="audio/mpeg"/>
+</item>
+<item>
+<title>Garbage date</title>
+<guid>malformed-3</guid>
+<pubDate>not a date</pubDate>
+<enclosure url="https://example.com/m/3.mp3" type="audio/mpeg"/>
+</item>
+<item>
+<title>ISO 8601 pubDate</title>
+<guid>malformed-4</guid>
+<pubDate>2021-09-06T08:00:00Z</pubDate>
+<enclosure url="https://example.com/m/4.mp3" type="audio/mpeg"/>
+</item>
+<item>
+<title>Invalid duration shape</title>
+<guid>malformed-5</guid>
+<pubDate>Mon, 06 Sep 2021 08:00:00 GMT</pubDate>
+<itunes:duration>1:2:3:4</itunes:duration>
+<enclosure url="https://example.com/m/5.mp3" type="audio/mpeg"/>
+</item>
+</channel>
+</rss>

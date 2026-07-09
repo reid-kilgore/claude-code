@@ -59,8 +59,11 @@ final class AppContainer {
             fatalError("Failed to create ModelContainer: \(error)")
         }
 
-        let catalog = MockCatalogService() // M1 wiring pending
+        // M1
+        let downloadCoordinator = DownloadCoordinator()
+        let catalog = CatalogService(modelContainer: modelContainer, downloadCoordinator: downloadCoordinator)
         self.catalogService = catalog
+        Task { await downloadCoordinator.attach(catalogService: catalog) }
 
         // M5
         self.translationService = TranslationService(

@@ -1,0 +1,45 @@
+{
+  "resultCount": 4,
+  "results": [
+    {
+      "wrapperType": "track",
+      "kind": "podcast",
+      "collectionId": 111111,
+      "collectionName": "Radio Ambulante",
+      "artistName": "NPR",
+      "feedUrl": "https://feeds.example.com/radioambulante.xml",
+      "artworkUrl600": "https://example.com/art/ra600.jpg",
+      "artworkUrl100": "https://example.com/art/ra100.jpg",
+      "primaryGenreName": "Society & Culture"
+    },
+    {
+      "wrapperType": "track",
+      "kind": "audiobook",
+      "collectionId": 222222,
+      "collectionName": "Some Audiobook",
+      "artistName": "Some Author",
+      "feedUrl": "https://feeds.example.com/audiobook.xml",
+      "artworkUrl600": "https://example.com/art/ab600.jpg",
+      "primaryGenreName": "Fiction"
+    },
+    {
+      "wrapperType": "track",
+      "kind": "podcast",
+      "collectionId": 333333,
+      "collectionName": "No Feed Podcast",
+      "artistName": "Nobody",
+      "artworkUrl600": "https://example.com/art/nf600.jpg",
+      "primaryGenreName": "News"
+    },
+    {
+      "wrapperType": "track",
+      "kind": "podcast",
+      "collectionId": 444444,
+      "collectionName": "Small Art Podcast",
+      "artistName": "Someone",
+      "feedUrl": "https://feeds.example.com/smallart.xml",
+      "artworkUrl100": "https://example.com/art/sa100.jpg",
+      "primaryGenreName": "Arts"
+    }
+  ]
+}

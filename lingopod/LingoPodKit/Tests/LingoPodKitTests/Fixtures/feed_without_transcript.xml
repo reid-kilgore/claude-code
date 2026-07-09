@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+<channel>
+<title>Tech Weekly</title>
+<description>Weekly tech news roundup.</description>
+<language>en-US</language>
+<itunes:author>Tech Weekly Team</itunes:author>
+<image><url>https://example.com/tw-art.jpg</url><title>Tech Weekly</title><link>https://example.com</link></image>
+<item>
+<title>Item One</title>
+<description>The first item, plain text description.</description>
+<guid>tw-item-1</guid>
+<pubDate>Mon, 01 Mar 2021 10:00:00 GMT</pubDate>
+<enclosure url="https://example.com/tw/1.mp3" type="audio/mpeg"/>
+</item>
+<item>
+<title>Item Two (no guid)</title>
+<description>This item has no guid element.</description>
+<pubDate>Tue, 02 Mar 2021 10:00:00 GMT</pubDate>
+<enclosure url="https://example.com/tw/2.mp3" type="audio/mpeg"/>
+</item>
+<item>
+<title>Item Three (CDATA)</title>
+<description><![CDATA[<p>This is <b>bold</b> HTML in a CDATA block.</p>]]></description>
+<guid>tw-item-3</guid>
+<pubDate>Wed, 03 Mar 2021 10:00:00 GMT</pubDate>
+<enclosure url="https://example.com/tw/3.mp3" type="audio/mpeg"/>
+</item>
+<item>
+<title>Item Four (summary fallback)</title>
+<itunes:summary>Summary-only description via itunes:summary.</itunes:summary>
+<guid>tw-item-4</guid>
+<pubDate>Thu, 04 Mar 2021 10:00:00 GMT</pubDate>
+<enclosure url="https://example.com/tw/4.mp3" type="audio/mpeg"/>
+</item>
+<item>
+<title>Item Five</title>
+<description>The fifth and final item.</description>
+<guid>tw-item-5</guid>
+<pubDate>Fri, 05 Mar 2021 10:00:00 GMT</pubDate>
+<enclosure url="https://example.com/tw/5.mp3" type="audio/mpeg"/>
+</item>
+</channel>
+</rss>

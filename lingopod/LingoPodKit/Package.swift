@@ -22,6 +22,12 @@ let package = Package(
         .testTarget(
             name: "LingoPodKitTests",
             dependencies: ["LingoPodKit"],
+            resources: [
+                // M1: ships RSS/JSON fixtures with the test bundle (spec
+                // §1). Also available for other modules' fixtures (e.g.
+                // M3's SRT/VTT/JSON transcript samples).
+                .copy("Fixtures")
+            ],
             swiftSettings: [
                 .swiftLanguageMode(.v6)
             ]
